@@ -82,6 +82,3 @@ The dataset used is `Book_Dataset_1.csv`, which contains the following columns:
 -  "Romantic novels" 
 -  "Historical mystery" 
 
-## License
-
-This project is open-source and free to use.
