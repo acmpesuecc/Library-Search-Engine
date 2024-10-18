@@ -91,13 +91,8 @@ def search_similar_books(search_term, dictionary):
     book_names = []
 
     for j, book in enumerate(books_list):
-        # Get the full book description
         description = df_books['Book_Description'][book[0]]
-        
-        # Truncate the book description to 500 characters or less
         truncated_description = description[:500]
-        
-        # Ensure the truncation doesn't cut a word in the middle
         if len(description) > 500 and ' ' in truncated_description:
             truncated_description = truncated_description.rsplit(' ', 1)[0] + '...'
 
