@@ -78,7 +78,6 @@ def search():
     query = request.form['query']
     results = search_similar_books(query, dictionary)
     return render_template('results.html', results=results)
-
 def search_similar_books(search_term, dictionary):
     query_bow = dictionary.doc2bow(spacy_tokenizer(search_term))
     query_tfidf = book_tfidf_model[query_bow]
@@ -92,22 +91,29 @@ def search_similar_books(search_term, dictionary):
     book_names = []
 
     for j, book in enumerate(books_list):
-        # Truncate the book description to the first three sentences
+        # Get the full book description
         description = df_books['Book_Description'][book[0]]
-        sentences = re.split(r'(?<=[.!?])\s+', description)[:3]  # Split sentences
-        truncated_description = ' '.join(sentences)
+        
+        # Truncate the book description to 500 characters or less
+        truncated_description = description[:500]
+        
+        # Ensure the truncation doesn't cut a word in the middle
+        if len(description) > 500 and ' ' in truncated_description:
+            truncated_description = truncated_description.rsplit(' ', 1)[0] + '...'
 
         book_names.append({
-            'Relevance': round((book[1] * 100),2),
+            'Relevance': round((book[1] * 100), 2),
             'book Title': df_books['Title'][book[0]],
             'book Plot': truncated_description,
             'Image_Link': df_books['Image_Link'][book[0]]
         })
 
-        if j == (book_index.num_best-1):
+        if j == (book_index.num_best - 1):
             break
 
     return book_names
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
