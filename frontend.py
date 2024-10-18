@@ -9,6 +9,7 @@ import re
 from gensim import corpora
 from gensim.similarities import MatrixSimilarity
 from operator import itemgetter
+import unicodedata
 
 app = Flask(__name__)
 
@@ -26,20 +27,29 @@ punctuations = string.punctuation
 stop_words = spacy.lang.en.stop_words.STOP_WORDS
 
 def spacy_tokenizer(sentence):
-    # Data cleaning
-    sentence = re.sub('\'','',sentence)
-    sentence = re.sub('\w*\d\w*','',sentence)
-    sentence = re.sub(' +',' ',sentence)
-    sentence = re.sub(r'\n: \'\'.*','',sentence)
-    sentence = re.sub(r'\n!.*','',sentence)
-    sentence = re.sub(r'^:\'\'.*','',sentence)
-    sentence = re.sub(r'\n',' ',sentence)
-    sentence = re.sub(r'[^\w\s]',' ',sentence)
+    #Normalize to NFC - handle non-ASCII characters better
+    sentence = unicodedata.normalize("NFC", sentence)
     
-    # Tokenization, lemmatization, stop words removal
+    #optimized regex patterns
+    sentence = re.sub(r"[‘’`]", "'", sentence) 
+    sentence = re.sub(r"\w*\d\w*", "", sentence) 
+    sentence = re.sub(r" +", " ", sentence.strip())  
+    sentence = re.sub(r"\n+", " ", sentence) 
+    sentence = re.sub(r"[^\w\s.,!?]", " ", sentence) 
+    
     tokens = spacy_nlp(sentence)
-    tokens = [word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ for word in tokens]
-    tokens = [word for word in tokens if word not in stop_words and word not in punctuations and len(word) > 2]
+    tokens = [
+        word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ 
+        for word in tokens
+    ]
+    
+    tokens = [
+        word for word in tokens 
+        if word not in stop_words 
+        and word not in punctuations 
+        and len(word) > 2 
+        and not word.isspace()
+    ]
     
     return tokens
 
