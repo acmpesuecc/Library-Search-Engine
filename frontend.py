@@ -28,7 +28,7 @@ stop_words = spacy.lang.en.stop_words.STOP_WORDS
 def spacy_tokenizer(sentence):
     # Data cleaning
     sentence = re.sub('\'','',sentence)
-    sentence = re.sub('\w*\d\w*','',sentence)
+    sentence = re.sub(r'\w*\d\w*','',sentence)
     sentence = re.sub(' +',' ',sentence)
     sentence = re.sub(r'\n: \'\'.*','',sentence)
     sentence = re.sub(r'\n!.*','',sentence)
