@@ -2,6 +2,8 @@
 
 This project is a web-based application that recommends books based on a user's query. The app utilizes NLP techniques to tokenize and analyze book descriptions, and applies TF-IDF and Latent Semantic Indexing (LSI) models to find and recommend similar books. Flask is used for the backend server and web interface.
 
+**Note:** If you're a contributer please read CONTRIBUTING.md
+
 ## Features
 
 -  Book Similarity Search : Given a search query, the system finds the top 5 books that are most relevant based on their descriptions.
