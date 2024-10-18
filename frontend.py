@@ -1,5 +1,6 @@
 import pickle
-from flask import Flask, render_template, request
+import os
+from flask import Flask, render_template, request, flash
 import pandas as pd
 import spacy
 import string
@@ -12,6 +13,7 @@ from operator import itemgetter
 import unicodedata
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Required for flashing messages
 
 # Load dataset
 dataset = "Book_Dataset_1.csv"
@@ -27,10 +29,10 @@ punctuations = string.punctuation
 stop_words = spacy.lang.en.stop_words.STOP_WORDS
 
 def spacy_tokenizer(sentence):
-    #Normalize to NFC - handle non-ASCII characters better
+    # Normalize to NFC - handle non-ASCII characters better
     sentence = unicodedata.normalize("NFC", sentence)
     
-    #optimized regex patterns
+    # Optimized regex patterns
     sentence = re.sub(r"[‘’`]", "'", sentence) 
     sentence = re.sub(r"\w*\d\w*", "", sentence) 
     sentence = re.sub(r" +", " ", sentence.strip())  
@@ -57,10 +59,18 @@ def spacy_tokenizer(sentence):
 df_books['Book_Description_tokenized'] = df_books['Book_Description'].map(lambda x: spacy_tokenizer(x))
 
 # Load pre-trained models or train models if necessary
+models_path = 'models.pickle'
 try:
-    with open('models.pickle', 'rb') as f:
-        book_tfidf_model, book_lsi_model, dictionary = pickle.load(f)
-except FileNotFoundError:
+    if os.path.exists(models_path):
+        with open(models_path, 'rb') as f:
+            book_tfidf_model, book_lsi_model, dictionary = pickle.load(f)
+    else:
+        raise FileNotFoundError("The model file does not exist.")
+except (FileNotFoundError, EOFError, pickle.UnpicklingError) as e:
+    flash(f"Error loading models: {str(e)}. Please ensure the 'models.pickle' file is present and not corrupted. You may need to retrain the models.")
+    # Call your model training function here if needed
+    # train_models()  # Uncomment and implement this function as needed
+
     # Create and train TF-IDF model
     dictionary = corpora.Dictionary(df_books['Book_Description_tokenized'])
     corpus = [dictionary.doc2bow(desc) for desc in df_books['Book_Description_tokenized']]
@@ -70,14 +80,13 @@ except FileNotFoundError:
     book_lsi_model = gensim.models.LsiModel(book_tfidf_model[corpus], id2word=dictionary, num_topics=300)
 
     # Save models to pickle file
-    with open('models.pickle', 'wb') as f:
+    with open(models_path, 'wb') as f:
         pickle.dump((book_tfidf_model, book_lsi_model, dictionary), f)
-
 
 # Load indexed corpus
 book_tfidf_corpus = gensim.corpora.MmCorpus('book_tfidf_model_mm')
 book_lsi_corpus = gensim.corpora.MmCorpus('book_lsi_model_mm')
-book_index = MatrixSimilarity(book_lsi_corpus, num_features = book_lsi_corpus.num_terms)
+book_index = MatrixSimilarity(book_lsi_corpus, num_features=book_lsi_corpus.num_terms)
 
 @app.route('/')
 def index():
@@ -87,37 +96,4 @@ def index():
 def search():
     query = request.form['query']
     results = search_similar_books(query, dictionary)
-    return render_template('results.html', results=results)
-
-def search_similar_books(search_term, dictionary):
-    query_bow = dictionary.doc2bow(spacy_tokenizer(search_term))
-    query_tfidf = book_tfidf_model[query_bow]
-    query_lsi = book_lsi_model[query_tfidf]
-
-    book_index.num_best = 5
-
-    books_list = book_index[query_lsi]
-
-    books_list.sort(key=itemgetter(1), reverse=True)
-    book_names = []
-
-    for j, book in enumerate(books_list):
-        # Truncate the book description to the first three sentences
-        description = df_books['Book_Description'][book[0]]
-        sentences = re.split(r'(?<=[.!?])\s+', description)[:3]  # Split sentences
-        truncated_description = ' '.join(sentences)
-
-        book_names.append({
-            'Relevance': round((book[1] * 100),2),
-            'book Title': df_books['Title'][book[0]],
-            'book Plot': truncated_description,
-            'Image_Link': df_books['Image_Link'][book[0]]
-        })
-
-        if j == (book_index.num_best-1):
-            break
-
-    return book_names
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return render_templat
