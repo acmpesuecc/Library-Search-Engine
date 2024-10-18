@@ -1,7 +1,7 @@
 # Participiant: How to Contribute
 1. **Setup Your Codebase:**
 
-- Fork the repository (acmpesuecc/mutual-funds-manager) to your GitHub account
+- Fork the repository (acmpesuecc/Library-Search-Engine) to your GitHub account
 - Clone your forked repository to your local machine using Git (make sure it's installed)
 ```bash
    git clone git@github.com:your-username/repo-name.git
@@ -13,7 +13,7 @@
 git commit -m "Describe the changes you made"
 git push
 ```
-Alternatively, use VSCode's inbuilt Git source control pane Ctrl+Shift+G if you're unconfortable with a CLI
+Alternatively, use VSCode's inbuilt Git source control pane Ctrl+Shift+G if you're uncomfortable with a CLI
 
 4. **Submit a Pull Request:** After pushing your changes, open a pull request from your fork to this repository (remember to reference the correct issue in your PR).
 
